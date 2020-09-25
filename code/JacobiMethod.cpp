@@ -55,8 +55,34 @@ void Jacobi::MaxOffdiag(mat A, int *p, int*q, int n){
   }
 }
 
-//void JacobiRotate(){
-//}
+void JacobiRotate(mat A, mat R, int k, int l, int n){
+  double tau, tan, cos, sin;
+
+  if (A(k,l) != 0.0){ //avoid divison by zero
+    tau = (A(l,l) - A(k,k))/2*A(k,l);
+
+    //Choose right sign for tau calculaiton
+    if (tau >= 0){
+      
+
+    }
+
+    tan = 1/(tau + sqrt(tau*tau + 1))
+    cos = 1/sqrt(1 + tan*tan)
+    sin = cos*tan
+
+  }
+  else {
+    tan = 0.0
+    cos = 1.0
+
+  }
+
+
+
+
+
+}
 
 /*
 int Jacobi::test(int a){

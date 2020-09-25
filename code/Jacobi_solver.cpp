@@ -31,13 +31,15 @@ int main(int argc, char const *argv[]) {
   double tol = 1.0E-10;
   int iter = 0;
   int maxiter = 10;
-  //Jacobi my_functions
-  //while (maxnondig > tol && iter <= maxiter){
-  //  my_functions.MaxOffdiag(A, &p, &q, n);
+  int maxnondig = 1;
+  int p; int q;
+  while (maxnondig > tol && iter <= maxiter){
+    my_functions.MaxOffdiag(A, &p, &q, n);
+    cout << p <<" "<< q << " "<< A(p,q) << endl;
   //  JacobiRotate(A, R, p, q, n);
   //  maxnondig = A(&p, &q)
-  //  iter++;
-  //}
+    iter++;
+  }
 
 
 }
