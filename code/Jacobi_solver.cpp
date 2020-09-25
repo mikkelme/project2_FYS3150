@@ -24,24 +24,31 @@ int main(int argc, char const *argv[]) {
   //Create Matrix
   double Rmin = 0;
   double Rmax = 1;
-  int n = 10;
+  int n = 20;
   mat A = my_functions.CreateMatrix(Rmin, Rmax, n);
+  mat R = eye<mat>(n,n); //For eigenvectors on each row
   //my_functions.ShowMatrix(A);
 
   double tol = 1.0E-10;
   int iter = 0;
-  int maxiter = 10;
-  int maxnondig = 1;
+  int maxiter = 1e3;
+  double maxnondig;
   int p; int q;
+  my_functions.MaxOffdiag(A, p, q, maxnondig, n);
   while (maxnondig > tol && iter <= maxiter){
-    my_functions.MaxOffdiag(A, &p, &q, n);
-    cout << p <<" "<< q << " "<< A(p,q) << endl;
-  //  JacobiRotate(A, R, p, q, n);
-  //  maxnondig = A(&p, &q)
+    my_functions.JacobiRotate(A, R, p, q, n);
+    my_functions.MaxOffdiag(A, p, q, maxnondig, n);
     iter++;
   }
 
+  //Order result and show
+  //my_functions.OrderEigenvalues(A)
+  cout << "iter = " << iter << endl;
+  for (int i = 0; i < n; i++){
+    cout << A(i,i) << endl;
+  }
 
+return 0;
 }
 
 

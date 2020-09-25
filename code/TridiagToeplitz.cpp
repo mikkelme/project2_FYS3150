@@ -34,12 +34,20 @@ int main(int argc, char* argv[]){
   A(N-1,N-2) = a;
   A(N-1,N-1) = d;
 
+
   // Diagonalize and obtain eigenvalues
   vec Eigval(N);
   eig_sym(Eigval, A);
 
-  // Print numerical vs analytical results
   double pi = acos(-1.0);
+  for(int i = 0; i < N; i++) {
+    double Exact = d+2*a*cos((i+1)*pi/(N+1));
+    cout << Eigval[i] << " " << Exact << endl;
+  }
+  /*
+
+  // Print numerical vs analytical results
+
   cout << "RESULTS:" << endl;
   cout << setiosflags(ios::showpoint | ios::uppercase);
   cout <<"Number of Eigenvalues = " << setw(15) << N << endl;
@@ -48,6 +56,7 @@ int main(int argc, char* argv[]){
     double Exact = d+2*a*cos((i+1)*pi/(N+1));
     cout << setw(15) << setprecision(8) << fabs(Eigval[i]-Exact) << endl;
   }
+  */
 
   return 0;
 }  //  end of main function
