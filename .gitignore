@@ -1,3 +1,7 @@
+#Compiled files
+*.exe
+
+#Latex
 *.aux
 *.fdb_latexmk
 *.fls
@@ -5,4 +9,6 @@
 *.gz
 *.out
 *.toc
+
+#Mac files
 *.DS_Store
