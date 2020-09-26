@@ -1,21 +1,15 @@
 #include "JacobiMethod.h"
 #include <iostream>
 #include <cmath>
+
 #include <armadillo>
 
 using namespace  std;
 using namespace  arma;
 
-
-mat Jacobi::CreateMatrix(double Rmin, double Rmax, int n){
+mat Jacobi::CreateTridiagonal(double d, double a, int n){
+  //Create tridiagonal matrix
   int     i, j;
-  double  h, hh, d, a;
-
-  //Intregration step length
-  h = (Rmax - Rmin)/n; hh = h*h;
-  d = 2.0 / (hh);   // DiagConst
-  a =  -1.0 / (hh); //nondiagConst
-  // Setting up tridiagonal matrix A
   mat A = zeros<mat>(n,n);
   A(0,0) = d;
   A(0,1) = a;
@@ -28,9 +22,8 @@ mat Jacobi::CreateMatrix(double Rmin, double Rmax, int n){
   A(n-1,n-1) = d;
   return A;
 }
-
-
 void Jacobi::ShowMatrix(mat A){
+  //Prints a matrix
   int ni = size(A)[0];
   int nj = size(A)[1];
   for (int i = 0; i < ni; i++){
@@ -40,9 +33,9 @@ void Jacobi::ShowMatrix(mat A){
     cout << endl;
   }
 }
-
-
 void Jacobi::MaxOffdiag(mat A, int& p, int& q, double& maxnondig, int n){
+  //Find max off-diagonal element
+  //Update indexes p and q and return absolute value
   double max;
   for (int i = 0; i < n; ++i){
     for (int j= i + 1; j < n; ++j){
@@ -55,8 +48,8 @@ void Jacobi::MaxOffdiag(mat A, int& p, int& q, double& maxnondig, int n){
   }
   maxnondig = fabs(A(p,q));
 }
-
 void Jacobi::JacobiRotate(mat& A, mat& R, int k, int l, int n){
+  //Perform jacobi raotation
   double tau, tan, cos, sin;
 
   if (A(k,l) != 0.0){ //avoid divison by zero
@@ -99,7 +92,28 @@ void Jacobi::JacobiRotate(mat& A, mat& R, int k, int l, int n){
     R(i,k) = r_ik_old*cos - r_il_old*sin;
     R(i,l) = r_il_old*cos + r_ik_old*sin;
   }
-
 return;
+}
+mat Jacobi::OrderEigenResults(mat& A, mat& R, int n){
+  //Return sorted array for the eigenvalues
+  //& sort the eigenvector-matrix accordingly
+  mat Eigval = zeros<mat>(n);
+  for (int i = 0; i < n; i++){
+    Eigval(i) = A(i,i);
+  }
+  uvec idx = sort_index(Eigval);
+  R = R.rows(idx(span(0, n-1)));
+  return sort(Eigval);
+}
+void Jacobi::WriteIter(int iter){
+  ofstream ofile;
+  string output_file = "iter_dim.txt";
+  ofile.open(output_file, ios::out | ios::app);
+  if (ofile.fail()){
+    throw ios_base::failure(strerror(errno));
+  }
+  ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
 
+  ofile << iter << endl;
+  ofile.close();
 }

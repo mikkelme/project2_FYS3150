@@ -10,10 +10,12 @@ private:
 
 
 public:
-  mat CreateMatrix(double Rmin, double Rmax, int n);
+  mat CreateTridiagonal(double d, double a, int n);
   void ShowMatrix(mat A);
   void MaxOffdiag(mat A, int& p, int& q, double& maxnondig, int n);
   void JacobiRotate(mat& A, mat& R, int k, int l, int n);
+  mat OrderEigenResults(mat& A, mat&R, int n);
+  void WriteIter(int iter);
 
 
 };
