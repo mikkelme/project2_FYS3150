@@ -10,6 +10,7 @@
 *.out
 *.toc
 
+#Text files including run data
 #Mac files
 *.DS_Store
 
