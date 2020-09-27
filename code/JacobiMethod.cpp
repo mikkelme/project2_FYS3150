@@ -117,3 +117,37 @@ void Jacobi::WriteIter(int iter){
   ofile << iter << endl;
   ofile.close();
 }
+void Jacobi::WriteMeanError(mat& Eigval, double d, double a, int n){
+  ofstream ofile;
+  string output_file = "MeanError.txt";
+  double pi = acos(-1.0);
+  double MeanError;
+
+  ofile.open(output_file, ios::out | ios::app);
+  if (ofile.fail()){
+    throw ios_base::failure(strerror(errno));
+  }
+  ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
+  ofile << setiosflags(ios::showpoint | ios::uppercase);
+  for(int i = 0; i < n; i++) {
+    double Exact = d+2*a*cos((i+1)*pi/(n+1));
+    MeanError += fabs(Exact - Eigval(i));
+  }
+  MeanError /= n;
+  ofile << setprecision(8) << MeanError <<endl;
+  ofile.close();
+}
+void Jacobi::WriteTime(double timeused){
+  ofstream ofile;
+  string output_file = "Timeused.txt";
+
+  ofile.open(output_file, ios::out | ios::app);
+  if (ofile.fail()){
+    throw ios_base::failure(strerror(errno));
+  }
+  ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
+  ofile << setiosflags(ios::showpoint | ios::uppercase);
+
+  ofile << setprecision(8) << timeused <<endl;
+  ofile.close();
+}

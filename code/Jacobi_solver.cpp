@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <armadillo>
+#include "time.h"
 
 using namespace  std;
 using namespace  arma;
@@ -31,26 +32,25 @@ int main(int argc, char const *argv[]) {
   int maxiter = 5e4;
   double maxnondig;
   int p; int q;
+
+  clock_t start, finish;
+  start = clock();
+
   my_functions.MaxOffdiag(A, p, q, maxnondig, n);
   while (maxnondig > tol && iter <= maxiter){
     my_functions.JacobiRotate(A, R, p, q, n);
     my_functions.MaxOffdiag(A, p, q, maxnondig, n);
     iter++;
   }
-  //Order result and show
+
+  finish = clock();
+  double timeused = (double) (finish - start)/(CLOCKS_PER_SEC );
+
+  //Order result and write to files
   mat Eigval = my_functions.OrderEigenResults(A, R, n);
-
   my_functions.WriteIter(iter - 1);
-  /*
-  double pi = acos(-1.0);
-  for(int i = 0; i < n; i++) {
-    double Exact = d+2*a*cos((i+1)*pi/(n+1));
-    cout << Eigval(i) << " " << Exact << endl;
-  }
-  */
-
-
-
+  my_functions.WriteMeanError(Eigval, d, a, n);
+  my_functions.WriteTime(timeused);
 
 
 return 0;
