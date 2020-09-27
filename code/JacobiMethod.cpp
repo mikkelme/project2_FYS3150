@@ -1,21 +1,53 @@
 #include "JacobiMethod.h"
 #include <iostream>
 #include <cmath>
-
+#include <iomanip>
 #include <armadillo>
+#include <cassert>
+#include <vector>
+
 
 using namespace  std;
 using namespace  arma;
 
-mat Jacobi::CreateTridiagonal(double d, double a, int n){
-  //Create tridiagonal matrix
+mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max, double w){
+  //Create tridiagonal matr ix
   int     i, j;
+  double rho[n];
+  
+  //rho[0] = 0.0;
+  rho[n] = rho_max;
+  double h = rho[n]/n;
+  for(i=0; i<n; i++){
+  	rho[i] = i*h;
+    rho[i] = rho[i]*rho[i];
+  }
+  
+  if (arg != 1 || arg != 2){
+    for(i = 0; i<n-1; i++){
+      rho[i] = 0;
+    }
+  }
+  if (arg == 1){
+    for(i = 0; i<n-1; i++){
+      rho[i] = i*h;
+      rho[i] = rho[i]*rho[i];
+    }
+  }
+  if (arg == 2){
+    h = (rho[n]-rho[0])/n;
+    for(i = 0; i<n-1; i++){
+      rho[i] = i*h;
+      rho[i] = w*w*rho[i]*rho[i] + 1/rho[i];
+    }
+  }
+  
   mat A = zeros<mat>(n,n);
   A(0,0) = d;
   A(0,1) = a;
   for(i = 1; i < n-1; i++) {
     A(i,i-1) = a;
-    A(i,i)   = d;
+    A(i,i)   = d+rho[i];
     A(i,i+1) = a;
   }
   A(n-1,n-2) = a;
@@ -104,6 +136,7 @@ mat Jacobi::OrderEigenResults(mat& A, mat& R, int n){
   uvec idx = sort_index(Eigval);
   R = R.rows(idx(span(0, n-1)));
   return sort(Eigval);
+
 }
 void Jacobi::WriteIter(int iter){
   ofstream ofile;
@@ -137,6 +170,20 @@ void Jacobi::WriteMeanError(mat& Eigval, double d, double a, int n){
   ofile << setprecision(8) << MeanError <<endl;
   ofile.close();
 }
+void Jacobi::WriteEig(mat& Eigval, mat& R, int n){
+  ofstream ofile;
+  string output_file = "eigvals_vecs.txt";
+
+  ofile.open(output_file, ios::out | ios::app);
+  if (ofile.fail()){
+  	throw ios_base::failure(strerror(errno));
+  }
+  ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
+  for(int i = 0; i<n; i++){
+  	ofile << setprecision(8) << Eigval(i) << "  " << R(i,i) << endl;
+  }
+}
+
 void Jacobi::WriteTime(double timeused){
   ofstream ofile;
   string output_file = "Timeused.txt";
@@ -150,4 +197,94 @@ void Jacobi::WriteTime(double timeused){
 
   ofile << setprecision(8) << timeused <<endl;
   ofile.close();
+}
+
+void Jacobi::OrthTest(double tol){
+	cout << "Testing orthogonality..." << endl;
+
+	int n = 4;
+	mat A(n,n, fill::randu); // Random 4x4 matrix
+	mat R = eye<mat>(n,n);
+
+	int p, q;
+	int iter = 1;
+	int maxiter = 1000;
+	double maxnondig;
+	
+	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
+	while (maxnondig > tol && iter <= maxiter){
+	    Jacobi::JacobiRotate(A, R, p, q, n);
+	    Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
+	    iter++;
+	}
+
+	mat RT = R.t();
+	mat I = eye<mat>(n,n);
+
+	bool test = false;
+	mat testMatrix = abs(RT*R-I);
+	if (all(all(testMatrix < tol))){
+		test = true;
+	}
+
+	assert(test);
+	cout << "Test passed successufully." << endl;
+}
+void Jacobi::EigValTest(double tol){
+	cout << "Testing eigenvalues..." << endl;
+
+	int n = 4;
+	mat A = {{2, 1, 0, 0}, // Symmetric 4x4 tridiagonal matrix
+			 {1, 2, 1, 0},
+			 {0, 1, 2, 1},
+			 {0, 0, 1, 2}};
+	mat R = eye<mat>(n,n);
+
+	int p, q;
+	int iter = 1;
+	int maxiter = 1000;
+	double maxnondig;
+
+	vec lambda(n);
+	eig_sym(lambda,A);
+	
+	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
+	while (maxnondig > tol && iter <= maxiter){
+	    Jacobi::JacobiRotate(A, R, p, q, n);
+	    Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
+	    iter++;
+	}
+	vec rotate_lambda = {A(0,0), A(1,1), A(2,2), A(3,3)};
+
+	bool test = false;	
+	if (all(sort(lambda)- sort(rotate_lambda) < tol)){
+		test = true;
+	}
+
+	assert(test);
+	cout << "Test passed successufully." << endl;
+}
+void Jacobi::MaxOffTest(double tol){
+	cout << "Testing max off-diagonal..." << endl;
+	
+	int n = 4;
+	mat A = {{1, 2, 5, 3}, // Some matrix where an off-diagonal element is the largest = 5
+			 {2, 3, 4, 1},
+			 {1, 0, 2, 3},
+			 {3, -2, 3, 2}};
+	mat R = eye<mat>(n,n);
+
+	int p, q;
+	double maxnondig;
+	
+	int arma_max = A.max();
+	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
+	
+	bool test = false;
+	if (maxnondig == 5 && maxnondig == arma_max){
+		test = true;
+	}
+
+	assert(test);
+	cout << "Test passed successufully." << endl;
 }
