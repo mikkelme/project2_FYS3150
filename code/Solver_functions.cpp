@@ -6,7 +6,6 @@
 #include <cassert>
 #include <vector>
 
-
 using namespace  std;
 using namespace  arma;
 
@@ -179,30 +178,17 @@ void Jacobi::WriteMeanError(vec& Eigval, vec& Exact, int n){
 }
 void Jacobi::PrintResults(vec& Eigval, vec& Exact, mat& R, int n, bool jacobi_solve, bool armadillo_solve, int arg){
   string solver; string potential;
-  if (jacobi_solve){
-    solver = "Solver = Jacobi Method";
-  }
-  else if (armadillo_solve){
-    solver = "Solver = Armadillo eig_sym";
-  }
-  if (arg == 1){
-    potential = "Potential = one electron";
-  }
-  else if (arg == 2){
-    potential = "Potential = two electrons";
-  }
-  else {
-    potential = "Potential = None ";
-  }
-
+  if (jacobi_solve)         {solver = "Solver = Jacobi Method";}
+  else if (armadillo_solve) {solver = "Solver = Armadillo eig_sym";}
+  if (arg == 1)             {potential = "Potential = one electron";}
+  else if (arg == 2)        {potential = "Potential = two electrons";}
+  else                      {potential = "Potential = None ";}
   cout << "---------------------------" << endl;
   cout << "Program details:" << endl;
   cout << solver << endl;
   cout << "Dimensions (n) = "<< n << endl;
   cout << potential << endl;
   cout << "---------------------------\n" << endl;
-
-
 
   cout << setw(11) << "Eigenvalues";
   cout << setw(20) << "Numerical";
