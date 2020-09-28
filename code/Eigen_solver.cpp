@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
 
   //Create Matrix
   mat A = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
-  mat R = eye<mat>(n,n); //For eigenvectors on each row
+  mat Eigvec = eye<mat>(n,n); //For eigenvectors on each row
+  vec Eigval(n); //Vector for eigenvalues
 
   //Run tests
   bool run_test = false;
@@ -49,7 +50,6 @@ int main(int argc, char *argv[]) {
   bool armadillo_solve = false;
 
   clock_t start, finish; //For timing
-  vec Eigval(n); //Vector for eigenvalues
 
   //Jacobi Method
   if (jacobi_solve){
@@ -59,34 +59,41 @@ int main(int argc, char *argv[]) {
     start = clock(); //Start timer
     my_functions.MaxOffdiag(A, p, q, maxnondig, n);
     while (maxnondig > tol && iter <= maxiter){
-      my_functions.JacobiRotate(A, R, p, q, n);
+      my_functions.JacobiRotate(A, Eigvec, p, q, n);
       my_functions.MaxOffdiag(A, p, q, maxnondig, n);
       iter++;
     }
     finish = clock(); //End timer
-    Eigval = my_functions.OrderEigenResults(A, R, n);
+    Eigval = my_functions.OrderEigenResults(A, Eigvec, n);
   }
 
   //Armdadillo eig_sym
   else if (armadillo_solve){
     cout << "armadillo" << endl;
     start = clock(); //Start timer
-    eig_sym(Eigval, A);
+    eig_sym(Eigval, Eigvec, A);
     finish = clock(); //End timer
     iter += 1;
   }
+  else {
+    cout << "Program failure: Must choose a solver method internally in Eigen_solver.cpp" << endl;;
+    return 1;
+  }
   double timeused = (double) (finish - start)/(CLOCKS_PER_SEC );
 
-  //Calculate Analytical eigenvalues
-  vec Exact = my_functions.CalculateExact(d,a,n);
+  //Calculate Analytical eigenvalues and eigenvectors
+  pair<vec, mat> pau = my_functions.CalculateExact(d,a,n);
+  vec Exact_eigval = pau.first;
+  mat Exact_eigvec = pau.second;
+
 
   //Write results
   my_functions.WriteIter(iter);
-  my_functions.WriteMeanError(Eigval, Exact, n);
+  my_functions.WriteMeanError(Eigval, Exact_eigval, n);
   my_functions.WriteTime(timeused);
 
   //Print results
-  my_functions.PrintResults(Eigval, Exact, R, n, jacobi_solve, armadillo_solve, arg);
+  my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
 return 0;
 }
 

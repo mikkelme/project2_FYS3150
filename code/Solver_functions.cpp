@@ -79,7 +79,7 @@ void Jacobi::MaxOffdiag(mat A, int& p, int& q, double& maxnondig, int n){
   }
   maxnondig = fabs(A(p,q));
 }
-void Jacobi::JacobiRotate(mat& A, mat& R, int k, int l, int n){
+void Jacobi::JacobiRotate(mat& A, mat& Eigvec, int k, int l, int n){
   //Perform jacobi raotation
   double tau, tan, cos, sin;
 
@@ -117,15 +117,15 @@ void Jacobi::JacobiRotate(mat& A, mat& R, int k, int l, int n){
       A(l,i) = A(i,l);
     }
     //eigenvectors
-    double r_ik_old = R(i,k);
-    double r_il_old = R(i,l);
+    double r_ik_old = Eigvec(i,k);
+    double r_il_old = Eigvec(i,l);
 
-    R(i,k) = r_ik_old*cos - r_il_old*sin;
-    R(i,l) = r_il_old*cos + r_ik_old*sin;
+    Eigvec(i,k) = r_ik_old*cos - r_il_old*sin;
+    Eigvec(i,l) = r_il_old*cos + r_ik_old*sin;
   }
 return;
 }
-vec Jacobi::OrderEigenResults(mat& A, mat& R, int n){
+vec Jacobi::OrderEigenResults(mat& A, mat& Eigvec, int n){
   //Return sorted array for the eigenvalues
   //& sort the eigenvector-matrix accordingly
   vec Eigval = zeros<mat>(n);
@@ -133,18 +133,23 @@ vec Jacobi::OrderEigenResults(mat& A, mat& R, int n){
     Eigval(i) = A(i,i);
   }
   uvec idx = sort_index(Eigval);
-  R = R.rows(idx(span(0, n-1)));
+  Eigvec = Eigvec.rows(idx(span(0, n-1)));
   return sort(Eigval);
 
 }
-vec Jacobi::CalculateExact(double d, double a, int n){
+pair<vec, mat> Jacobi::CalculateExact(double d, double a, int n){
   //Calculate analytical eigenvalues
-  vec Exact = zeros<mat>(n);
+  vec Exact_eigval = zeros<mat>(n);
+  mat Exact_eigvec = zeros <mat>(n,n);
+
   double pi = acos(-1.0);
   for(int i = 0; i < n; i++){
-    Exact(i) = d+2*a*cos((i+1)*pi/(n+1));
+    Exact_eigval(i) = d+2*a*cos((i+1)*pi/(n+1));
+    for (int j = 0; j < n; j++){
+      Exact_eigvec(i,j) = sin((j+1)*(i+1)*pi/(n+1));
+    }
   }
-  return Exact;
+  return make_pair(Exact_eigval, Exact_eigvec);
 }
 void Jacobi::WriteIter(int iter){
   ofstream ofile;
@@ -158,7 +163,7 @@ void Jacobi::WriteIter(int iter){
   ofile << iter << endl;
   ofile.close();
 }
-void Jacobi::WriteMeanError(vec& Eigval, vec& Exact, int n){
+void Jacobi::WriteMeanError(vec& Eigval, vec& Exact_eigval, int n){
   ofstream ofile;
   string output_file = "MeanError.txt";
   double MeanError;
@@ -170,13 +175,13 @@ void Jacobi::WriteMeanError(vec& Eigval, vec& Exact, int n){
   ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
   ofile << setiosflags(ios::showpoint | ios::uppercase);
   for(int i = 0; i < n; i++) {
-    MeanError += fabs(Exact(i) - Eigval(i));
+    MeanError += fabs(Exact_eigval(i) - Eigval(i));
   }
   MeanError /= n;
   ofile << setprecision(8) << MeanError <<endl;
   ofile.close();
 }
-void Jacobi::PrintResults(vec& Eigval, vec& Exact, mat& R, int n, bool jacobi_solve, bool armadillo_solve, int arg){
+void Jacobi::PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exact_eigvec, int n, bool jacobi_solve, bool armadillo_solve, int arg){
   string solver; string potential;
   if (jacobi_solve)         {solver = "Solver = Jacobi Method";}
   else if (armadillo_solve) {solver = "Solver = Armadillo eig_sym";}
@@ -197,17 +202,28 @@ void Jacobi::PrintResults(vec& Eigval, vec& Exact, mat& R, int n, bool jacobi_so
   for (int i = 0; i < n; i++){
     cout << setw(11) << i+1;
     cout << setw(20) << Eigval(i);
-    cout << setw(20) << Exact(i);
-    cout << setw(20) << fabs(Exact(i)-Eigval(i)) << endl;
+    cout << setw(20) << Exact_eigval(i);
+    cout << setw(20) << fabs(Exact_eigval(i)-Eigval(i)) << endl;
   }
-  cout << "\nEigenvectors" << endl;
+  cout << "\nNumerical eigenvectors:" << endl;
   for (int i = 0; i < n; i++){
-    cout << "(n = " << i << "):  [ ";
+    cout << i+1 << "):  [ ";
     for (int j = 0; j < n; j++){
-      cout << R(i,j) << " ";
+      cout << Eigvec(i,j) << " ";
     }
-    cout << "]\n"<< endl;
+    cout << "]"<< endl;
   }
+  cout << endl;
+
+  cout << "\nAnalytical eigenvectors:" << endl;
+  for (int i = 0; i < n; i++){
+    cout << i+1 << "):  [ ";
+    for (int j = 0; j < n; j++){
+      cout << Exact_eigvec(i,j) << " ";
+    }
+    cout << "]"<< endl;
+  }
+  cout << endl;
 }
 void Jacobi::WriteTime(double timeused){
   ofstream ofile;
@@ -228,7 +244,7 @@ void Jacobi::OrthTest(double tol){
 
 	int n = 4;
 	mat A(n,n, fill::randu); // Random 4x4 matrix
-	mat R = eye<mat>(n,n);
+	mat Eigvec = eye<mat>(n,n);
 
 	int p, q;
 	int iter = 1;
@@ -237,16 +253,16 @@ void Jacobi::OrthTest(double tol){
 
 	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	while (maxnondig > tol && iter <= maxiter){
-	    Jacobi::JacobiRotate(A, R, p, q, n);
+	    Jacobi::JacobiRotate(A, Eigvec, p, q, n);
 	    Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	    iter++;
 	}
 
-	mat RT = R.t();
+	mat RT = Eigvec.t();
 	mat I = eye<mat>(n,n);
 
 	bool test = false;
-	mat testMatrix = abs(RT*R-I);
+	mat testMatrix = abs(RT*Eigvec-I);
 	if (all(all(testMatrix < tol))){
 		test = true;
 	}
@@ -262,7 +278,7 @@ void Jacobi::EigValTest(double tol){
 			 {1, 2, 1, 0},
 			 {0, 1, 2, 1},
 			 {0, 0, 1, 2}};
-	mat R = eye<mat>(n,n);
+	mat Eigvec = eye<mat>(n,n);
 
 	int p, q;
 	int iter = 1;
@@ -274,7 +290,7 @@ void Jacobi::EigValTest(double tol){
 
 	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	while (maxnondig > tol && iter <= maxiter){
-	    Jacobi::JacobiRotate(A, R, p, q, n);
+	    Jacobi::JacobiRotate(A, Eigvec, p, q, n);
 	    Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	    iter++;
 	}
@@ -296,7 +312,7 @@ void Jacobi::MaxOffTest(double tol){
 			 {2, 3, 4, 1},
 			 {1, 0, 2, 3},
 			 {3, -2, 3, 2}};
-	mat R = eye<mat>(n,n);
+	mat Eigvec = eye<mat>(n,n);
 
 
   int p; int q;
