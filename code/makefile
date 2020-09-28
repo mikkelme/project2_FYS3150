@@ -1,7 +1,4 @@
-all: compile execute
+all: compile
 
 compile:
-	c++ -o Jacobi_solver.exe Jacobi_solver.cpp JacobiMethod.cpp -larmadillo
-
-execute:
-	./Jacobi_solver.exe
+	c++ -o Eigen_solver.exe Eigen_solver.cpp Solver_functions.cpp -std=c++11 -larmadillo

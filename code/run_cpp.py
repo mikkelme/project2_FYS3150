@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-def run_cpp(N_max, txt_files):
+def run_cpp(exe_file, txt_files, N_max, potential):
     """ Run program for different dimensions """
     for txt_file in txt_files: #Clear files before run
         with open(txt_file, "w") as infile:
@@ -11,12 +11,11 @@ def run_cpp(N_max, txt_files):
 
     #Run program for different dimensions
     N = np.linspace(2, N_max, N_max - 1)
-    print(f"Running program for n: [2:{N_max:d}]\nn: ", end = "")
+    print(f"Running: \"{exe_file} n {potential}\" for n: [2:{N_max:d}]\nn: ", end = "")
     for n in N: #Run Jacobi_solver for different dimensions n
-        subprocess.call(['./Jacobi_solver.exe', str(n)])
+        subprocess.call([exe_file, str(n), str(potential)])
         print(f"\r n: {int(n)}/{N_max}", end = "")
     print("\nDone")
-    return N
 
 def read_data(txt_file, N):
     """ Read data from different txt-files """
@@ -43,8 +42,8 @@ def plot(N, data, start, end, title, xlabel, ylabel):
 
     plt.title("Linear plot")
     plt.plot(N, data, "o")
-    plt.plot(N[start], data[start], "o", color = "tab:green", label = "start")
-    plt.plot(N[end], data[end], "o", color = "tab:red", label = "end")
+    plt.plot(N[start], data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
+    plt.plot(N[end], data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
@@ -52,8 +51,8 @@ def plot(N, data, start, end, title, xlabel, ylabel):
     plt.subplot(2,1,2)
     plt.title("Logaritmic plot")
     plt.plot(log_N, log_data, "o")
-    plt.plot(log_N[start], log_data[start], "o", color = "tab:green", label = "start")
-    plt.plot(log_N[end], log_data[end], "o", color = "tab:red", label = "end")
+    plt.plot(log_N[start], log_data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
+    plt.plot(log_N[end], log_data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
     plt.plot(x,y, label = f"Linear regression (y = ax + b) \n a={a:.3f}, b={b:0.3f}, $\delta a$={std_a:0.3f}")
     plt.xlabel("Log(" + xlabel + ")")
     plt.ylabel("Log(" + ylabel + ")")

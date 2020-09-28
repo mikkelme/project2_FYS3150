@@ -1,4 +1,4 @@
-#include "JacobiMethod.h"
+#include "Solver_functions.h"
 #include <iostream>
 #include <cmath>
 #include <iomanip>
@@ -14,7 +14,7 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   //Create tridiagonal matr ix
   int     i, j;
   double rho[n];
-  
+
   //rho[0] = 0.0;
   rho[n] = rho_max;
   double h = rho[n]/n;
@@ -22,7 +22,7 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   	rho[i] = i*h;
     rho[i] = rho[i]*rho[i];
   }
-  
+
   if (arg != 1 || arg != 2){
     for(i = 0; i<n-1; i++){
       rho[i] = 0;
@@ -41,7 +41,7 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
       rho[i] = w*w*rho[i]*rho[i] + 1/rho[i];
     }
   }
-  
+
   mat A = zeros<mat>(n,n);
   A(0,0) = d;
   A(0,1) = a;
@@ -126,10 +126,10 @@ void Jacobi::JacobiRotate(mat& A, mat& R, int k, int l, int n){
   }
 return;
 }
-mat Jacobi::OrderEigenResults(mat& A, mat& R, int n){
+vec Jacobi::OrderEigenResults(mat& A, mat& R, int n){
   //Return sorted array for the eigenvalues
   //& sort the eigenvector-matrix accordingly
-  mat Eigval = zeros<mat>(n);
+  vec Eigval = zeros<mat>(n);
   for (int i = 0; i < n; i++){
     Eigval(i) = A(i,i);
   }
@@ -137,6 +137,15 @@ mat Jacobi::OrderEigenResults(mat& A, mat& R, int n){
   R = R.rows(idx(span(0, n-1)));
   return sort(Eigval);
 
+}
+vec Jacobi::CalculateExact(double d, double a, int n){
+  //Calculate analytical eigenvalues
+  vec Exact = zeros<mat>(n);
+  double pi = acos(-1.0);
+  for(int i = 0; i < n; i++){
+    Exact(i) = d+2*a*cos((i+1)*pi/(n+1));
+  }
+  return Exact;
 }
 void Jacobi::WriteIter(int iter){
   ofstream ofile;
@@ -150,10 +159,9 @@ void Jacobi::WriteIter(int iter){
   ofile << iter << endl;
   ofile.close();
 }
-void Jacobi::WriteMeanError(mat& Eigval, double d, double a, int n){
+void Jacobi::WriteMeanError(vec& Eigval, vec& Exact, int n){
   ofstream ofile;
   string output_file = "MeanError.txt";
-  double pi = acos(-1.0);
   double MeanError;
 
   ofile.open(output_file, ios::out | ios::app);
@@ -163,27 +171,58 @@ void Jacobi::WriteMeanError(mat& Eigval, double d, double a, int n){
   ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
   ofile << setiosflags(ios::showpoint | ios::uppercase);
   for(int i = 0; i < n; i++) {
-    double Exact = d+2*a*cos((i+1)*pi/(n+1));
-    MeanError += fabs(Exact - Eigval(i));
+    MeanError += fabs(Exact(i) - Eigval(i));
   }
   MeanError /= n;
   ofile << setprecision(8) << MeanError <<endl;
   ofile.close();
 }
-void Jacobi::WriteEig(mat& Eigval, mat& R, int n){
-  ofstream ofile;
-  string output_file = "eigvals_vecs.txt";
-
-  ofile.open(output_file, ios::out | ios::app);
-  if (ofile.fail()){
-  	throw ios_base::failure(strerror(errno));
+void Jacobi::PrintResults(vec& Eigval, vec& Exact, mat& R, int n, bool jacobi_solve, bool armadillo_solve, int arg){
+  string solver; string potential;
+  if (jacobi_solve){
+    solver = "Solver = Jacobi Method";
   }
-  ofile.exceptions(ofile.exceptions() | ios::failbit | ifstream::badbit);
-  for(int i = 0; i<n; i++){
-  	ofile << setprecision(8) << Eigval(i) << "  " << R(i,i) << endl;
+  else if (armadillo_solve){
+    solver = "Solver = Armadillo eig_sym";
+  }
+  if (arg == 1){
+    potential = "Potential = one electron";
+  }
+  else if (arg == 2){
+    potential = "Potential = two electrons";
+  }
+  else {
+    potential = "Potential = None ";
+  }
+
+  cout << "---------------------------" << endl;
+  cout << "Program details:" << endl;
+  cout << solver << endl;
+  cout << "Dimensions (n) = "<< n << endl;
+  cout << potential << endl;
+  cout << "---------------------------\n" << endl;
+
+
+
+  cout << setw(11) << "Eigenvalues";
+  cout << setw(20) << "Numerical";
+  cout << setw(20) << "Analytical";
+  cout << setw(20) << "Absolute Error" << endl;
+  for (int i = 0; i < n; i++){
+    cout << setw(11) << i+1;
+    cout << setw(20) << Eigval(i);
+    cout << setw(20) << Exact(i);
+    cout << setw(20) << fabs(Exact(i)-Eigval(i)) << endl;
+  }
+  cout << "\nEigenvectors" << endl;
+  for (int i = 0; i < n; i++){
+    cout << "(n = " << i << "):  [ ";
+    for (int j = 0; j < n; j++){
+      cout << R(i,j) << " ";
+    }
+    cout << "]\n"<< endl;
   }
 }
-
 void Jacobi::WriteTime(double timeused){
   ofstream ofile;
   string output_file = "Timeused.txt";
@@ -198,7 +237,6 @@ void Jacobi::WriteTime(double timeused){
   ofile << setprecision(8) << timeused <<endl;
   ofile.close();
 }
-
 void Jacobi::OrthTest(double tol){
 	cout << "Testing orthogonality..." << endl;
 
@@ -210,7 +248,7 @@ void Jacobi::OrthTest(double tol){
 	int iter = 1;
 	int maxiter = 1000;
 	double maxnondig;
-	
+
 	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	while (maxnondig > tol && iter <= maxiter){
 	    Jacobi::JacobiRotate(A, R, p, q, n);
@@ -247,7 +285,7 @@ void Jacobi::EigValTest(double tol){
 
 	vec lambda(n);
 	eig_sym(lambda,A);
-	
+
 	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
 	while (maxnondig > tol && iter <= maxiter){
 	    Jacobi::JacobiRotate(A, R, p, q, n);
@@ -256,7 +294,7 @@ void Jacobi::EigValTest(double tol){
 	}
 	vec rotate_lambda = {A(0,0), A(1,1), A(2,2), A(3,3)};
 
-	bool test = false;	
+	bool test = false;
 	if (all(sort(lambda)- sort(rotate_lambda) < tol)){
 		test = true;
 	}
@@ -266,20 +304,21 @@ void Jacobi::EigValTest(double tol){
 }
 void Jacobi::MaxOffTest(double tol){
 	cout << "Testing max off-diagonal..." << endl;
-	
+
 	int n = 4;
-	mat A = {{1, 2, 5, 3}, // Some matrix where an off-diagonal element is the largest = 5
+	mat A = {{1, 2, 5, 3}, // Some matrix where an off-diagonal element is the largest = 5	int p, q;
 			 {2, 3, 4, 1},
 			 {1, 0, 2, 3},
 			 {3, -2, 3, 2}};
 	mat R = eye<mat>(n,n);
 
-	int p, q;
-	double maxnondig;
-	
-	int arma_max = A.max();
+
+  int p; int q;
+  double maxnondig;
+
 	Jacobi::MaxOffdiag(A, p, q, maxnondig, n);
-	
+  int arma_max = A.max();
+
 	bool test = false;
 	if (maxnondig == 5 && maxnondig == arma_max){
 		test = true;
