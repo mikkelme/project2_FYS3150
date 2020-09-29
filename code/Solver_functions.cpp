@@ -23,19 +23,18 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   }
 
   if (arg != 1 || arg != 2){
-    for(i = 0; i<n-1; i++){
+    for(i = 0; i<n; i++){
       rho[i] = 0;
     }
   }
   if (arg == 1){
-    for(i = 0; i<n-1; i++){
+    for(i = 0; i<n; i++){
       rho[i] = i*h;
       rho[i] = rho[i]*rho[i];
     }
   }
   if (arg == 2){
-    h = (rho[n]-rho[0])/n;
-    for(i = 0; i<n-1; i++){
+    for(i = 0; i<n; i++){
       rho[i] = i*h;
       rho[i] = w*w*rho[i]*rho[i] + 1/rho[i];
     }
@@ -194,12 +193,21 @@ void Jacobi::WriteTime(double timeused){
   ofile << setprecision(8) << timeused <<endl;
   ofile.close();
 }
-void Jacobi::WriteEig(mat& Eigval, mat& R, int n){
+void Jacobi::WriteEig(mat& Eigval, mat& Eigvec, int n){
    ofstream ofile;
    string output_file = "Eigvals.txt";
    ofile.open(output_file);
    for (int i = 0; i < n; i++){
      ofile << setprecision(8) << Eigval(i) << " ";
+   }
+   ofile.close();
+
+   output_file = "Eigvecs.txt";
+   ofile.open(output_file);
+   for (int i = 0; i < n; i++){
+    for (int j = 0; j <n; j++){
+     ofile << setprecision(8) << Eigvec(j,i) << " ";
+    }
    }
    ofile.close();
 }

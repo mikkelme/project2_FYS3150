@@ -3,7 +3,7 @@ import numpy as np
 from run_cpp import *
 
 #Variables
-exe_file = "./Jacobi_solver.exe"
+exe_file = "./Eigen_solver.exe"
 txt_files = ["iter_dim.txt", "MeanError.txt", "Timeused.txt"]
 N_max = 100
 potential = 0
