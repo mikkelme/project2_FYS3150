@@ -33,16 +33,16 @@ int main(int argc, char *argv[]) {
 
   //Create Matrix
   mat A = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
-  mat Eigvec = eye<mat>(n,n); //For eigenvectors on each row
+  mat Eigvec = eye<mat>(n,n); //For eigenvectors on each colum
   vec Eigval(n); //Vector for eigenvalues
 
   //Run tests
-  bool run_test = false;
+  bool run_test = true;
   if (run_test){
-    my_functions.OrthTest(tol);
-    my_functions.EigValTest(tol);
-    my_functions.MaxOffTest(tol);
-    cout << "All tests passed." << endl;
+    double test_tol = 1.0E-10;
+    my_functions.OrthTest(test_tol);
+    my_functions.EigValTest(test_tol);
+    my_functions.MaxOffTest(test_tol);
   }
 
   //Select eigenvalue solver
@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
 
   //Armdadillo eig_sym
   else if (armadillo_solve){
-    cout << "armadillo" << endl;
     start = clock(); //Start timer
     eig_sym(Eigval, Eigvec, A);
     finish = clock(); //End timer
@@ -86,30 +85,27 @@ int main(int argc, char *argv[]) {
   vec Exact_eigval = pau.first;
   mat Exact_eigvec = pau.second;
 
+  //Eigenvector test
+  if (run_test){
+    double test_tol = 1.0E-10;
+    mat A_original = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
+    my_functions.EigvecTest(test_tol, Eigval, Eigvec, A_original);
+  }
+
+
+
+
 
   //Write results
   my_functions.WriteIter(iter);
   my_functions.WriteMeanError(Eigval, Exact_eigval, n);
   my_functions.WriteTime(timeused);
+  my_functions.WriteEig(Eigval, Eigvec, n);
 
-  //Print results
+  //Print results (Only for n ≤ 10)
   my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
-return 0;
+
+
+
+  return 0;
 }
-
-
-/*
-all: compile execute
-
-compile:
-	c++ -o Jacobi_solver.exe Jacobi_solver.cpp JacobiMethod.cpp -larmadillo
-
-execute:
-	./Jacobi_solver.exe
-*/
-
-
-
-
-
-//

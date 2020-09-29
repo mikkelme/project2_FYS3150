@@ -121,7 +121,7 @@ void Jacobi::JacobiRotate(mat& A, mat& Eigvec, int k, int l, int n){
     double r_il_old = Eigvec(i,l);
 
     Eigvec(i,k) = r_ik_old*cos - r_il_old*sin;
-    Eigvec(i,l) = r_il_old*cos + r_ik_old*sin;
+    Eigvec(i,l) = r_ik_old*sin + r_il_old*cos;
   }
 return;
 }
@@ -133,9 +133,8 @@ vec Jacobi::OrderEigenResults(mat& A, mat& Eigvec, int n){
     Eigval(i) = A(i,i);
   }
   uvec idx = sort_index(Eigval);
-  Eigvec = Eigvec.rows(idx(span(0, n-1)));
+  Eigvec = Eigvec.cols(idx(span(0, n-1)));
   return sort(Eigval);
-
 }
 pair<vec, mat> Jacobi::CalculateExact(double d, double a, int n){
   //Calculate analytical eigenvalues
@@ -149,7 +148,7 @@ pair<vec, mat> Jacobi::CalculateExact(double d, double a, int n){
       Exact_eigvec(i,j) = sin((j+1)*(i+1)*pi/(n+1));
     }
   }
-  return make_pair(Exact_eigval, Exact_eigvec);
+  return make_pair(Exact_eigval, Exact_eigvec.t());
 }
 void Jacobi::WriteIter(int iter){
   ofstream ofile;
@@ -181,50 +180,6 @@ void Jacobi::WriteMeanError(vec& Eigval, vec& Exact_eigval, int n){
   ofile << setprecision(8) << MeanError <<endl;
   ofile.close();
 }
-void Jacobi::PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exact_eigvec, int n, bool jacobi_solve, bool armadillo_solve, int arg){
-  string solver; string potential;
-  if (jacobi_solve)         {solver = "Solver = Jacobi Method";}
-  else if (armadillo_solve) {solver = "Solver = Armadillo eig_sym";}
-  if (arg == 1)             {potential = "Potential = one electron";}
-  else if (arg == 2)        {potential = "Potential = two electrons";}
-  else                      {potential = "Potential = None ";}
-  cout << "---------------------------" << endl;
-  cout << "Program details:" << endl;
-  cout << solver << endl;
-  cout << "Dimensions (n) = "<< n << endl;
-  cout << potential << endl;
-  cout << "---------------------------\n" << endl;
-
-  cout << setw(11) << "Eigenvalues";
-  cout << setw(20) << "Numerical";
-  cout << setw(20) << "Analytical";
-  cout << setw(20) << "Absolute Error" << endl;
-  for (int i = 0; i < n; i++){
-    cout << setw(11) << i+1;
-    cout << setw(20) << Eigval(i);
-    cout << setw(20) << Exact_eigval(i);
-    cout << setw(20) << fabs(Exact_eigval(i)-Eigval(i)) << endl;
-  }
-  cout << "\nNumerical eigenvectors:" << endl;
-  for (int i = 0; i < n; i++){
-    cout << i+1 << "):  [ ";
-    for (int j = 0; j < n; j++){
-      cout << Eigvec(i,j) << " ";
-    }
-    cout << "]"<< endl;
-  }
-  cout << endl;
-
-  cout << "\nAnalytical eigenvectors:" << endl;
-  for (int i = 0; i < n; i++){
-    cout << i+1 << "):  [ ";
-    for (int j = 0; j < n; j++){
-      cout << Exact_eigvec(i,j) << " ";
-    }
-    cout << "]"<< endl;
-  }
-  cout << endl;
-}
 void Jacobi::WriteTime(double timeused){
   ofstream ofile;
   string output_file = "Timeused.txt";
@@ -239,8 +194,62 @@ void Jacobi::WriteTime(double timeused){
   ofile << setprecision(8) << timeused <<endl;
   ofile.close();
 }
+void Jacobi::WriteEig(mat& Eigval, mat& R, int n){
+   ofstream ofile;
+   string output_file = "Eigvals.txt";
+   ofile.open(output_file);
+   for (int i = 0; i < n; i++){
+     ofile << setprecision(8) << Eigval(i) << " ";
+   }
+   ofile.close();
+}
+void Jacobi::PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exact_eigvec, int n, bool jacobi_solve, bool armadillo_solve, int arg){
+  if (n > 10){ return;} //Only print results for n ≤ 10
+   string solver; string potential;
+   if (jacobi_solve)         {solver = "Solver = Jacobi Method";}
+   else if (armadillo_solve) {solver = "Solver = Armadillo eig_sym";}
+   if (arg == 1)             {potential = "Potential = one electron";}
+   else if (arg == 2)        {potential = "Potential = two electrons";}
+   else                      {potential = "Potential = None ";}
+   cout << "---------------------------" << endl;
+   cout << "Program details:" << endl;
+   cout << solver << endl;
+   cout << "Dimensions (n) = "<< n << endl;
+   cout << potential << endl;
+   cout << "---------------------------\n" << endl;
+
+   cout << setw(11) << "Eigenvalues";
+   cout << setw(20) << "Numerical";
+   cout << setw(20) << "Analytical";
+   cout << setw(20) << "Absolute Error" << endl;
+   for (int i = 0; i < n; i++){
+     cout << setw(11) << i+1;
+     cout << setw(20) << Eigval(i);
+     cout << setw(20) << Exact_eigval(i);
+     cout << setw(20) << fabs(Exact_eigval(i)-Eigval(i)) << endl;
+   }
+   cout << "\nNumerical eigenvectors:" << endl;
+   for (int i = 0; i < n; i++){
+     cout << i+1 << "):  [ ";
+     for (int j = 0; j < n; j++){
+       cout << Eigvec(i,j) << " ";
+     }
+     cout << "]"<< endl;
+   }
+   cout << endl;
+
+   cout << "\nAnalytical eigenvectors:" << endl;
+   for (int i = 0; i < n; i++){
+     cout << i+1 << "):  [ ";
+     for (int j = 0; j < n; j++){
+       cout << Exact_eigvec(i,j) << " ";
+     }
+     cout << "]"<< endl;
+   }
+   cout << endl;
+ }
 void Jacobi::OrthTest(double tol){
-	cout << "Testing orthogonality..." << endl;
+	cout << "Testing orthogonality: ";
 
 	int n = 4;
 	mat A(n,n, fill::randu); // Random 4x4 matrix
@@ -268,10 +277,10 @@ void Jacobi::OrthTest(double tol){
 	}
 
 	assert(test);
-	cout << "Test passed successufully." << endl;
+	cout << "Test passed successfully" << endl;
 }
 void Jacobi::EigValTest(double tol){
-	cout << "Testing eigenvalues..." << endl;
+	cout << "Testing eigenvalues: ";
 
 	int n = 4;
 	mat A = {{2, 1, 0, 0}, // Symmetric 4x4 tridiagonal matrix
@@ -302,10 +311,10 @@ void Jacobi::EigValTest(double tol){
 	}
 
 	assert(test);
-	cout << "Test passed successufully." << endl;
+	cout << "Test passed successfully" << endl;
 }
 void Jacobi::MaxOffTest(double tol){
-	cout << "Testing max off-diagonal..." << endl;
+	cout << "Testing max off-diagonal: ";
 
 	int n = 4;
 	mat A = {{1, 2, 5, 3}, // Some matrix where an off-diagonal element is the largest = 5	int p, q;
@@ -327,5 +336,36 @@ void Jacobi::MaxOffTest(double tol){
 	}
 
 	assert(test);
-	cout << "Test passed successufully." << endl;
+	cout << "Test passed successfully" << endl;
+}
+void Jacobi::EigvecTest(double tol, vec& Eigval, mat& Eigvec, mat& A_original){
+  cout << "Testing eigenvectors: ";
+
+  mat A_expected = A_original*Eigvec;
+  A_expected.each_row() /= Eigval.t();
+
+
+  bool test = true;
+
+  int ni = size(A_original)[0];
+  int nj = size(A_original)[1];
+  for (int i = 0; i < ni; i++){
+    for (int j = 0; j < nj; j++){
+      double diff = fabs(Eigvec(i,j) - A_expected(i,j));
+        if (diff > tol){test = false;}
+    }
+  }
+  if (test == false){
+    cout << "ERROR" << endl;
+    cout << "With eigenvalues:" << endl;
+    Jacobi::ShowMatrix(Eigval);
+    cout << "and eigenvector:" << endl;
+    Jacobi::ShowMatrix(Eigvec);
+    cout << "The matrix product A*eigenvec:" << endl;
+    Jacobi::ShowMatrix(A_expected);
+    cout << "is NOT equal to the eigenvector." << endl;
+  }
+  assert(test);
+
+  cout << "Test passed successfully" << endl;
 }
