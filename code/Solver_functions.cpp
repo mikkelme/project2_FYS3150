@@ -145,7 +145,7 @@ pair<vec, mat> Jacobi::CalculateExact(double d, double a, int n){
   for(int i = 0; i < n; i++){
     Exact_eigval(i) = d+2*a*cos((i+1)*pi/(n+1));
     for (int j = 0; j < n; j++){
-      Exact_eigvec(i,j) = sin((j+1)*(i+1)*pi/(n+1));
+      Exact_eigvec(j,i) = sin((j+1)*(i+1)*pi/(n+1));
     }
   }
   return make_pair(Exact_eigval, Exact_eigvec.t());
@@ -232,7 +232,7 @@ void Jacobi::PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exac
    for (int i = 0; i < n; i++){
      cout << i+1 << "):  [ ";
      for (int j = 0; j < n; j++){
-       cout << Eigvec(i,j) << " ";
+       cout << Eigvec(j,i) << " ";
      }
      cout << "]"<< endl;
    }
@@ -242,7 +242,7 @@ void Jacobi::PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exac
    for (int i = 0; i < n; i++){
      cout << i+1 << "):  [ ";
      for (int j = 0; j < n; j++){
-       cout << Exact_eigvec(i,j) << " ";
+       cout << Exact_eigvec(j,i) << " ";
      }
      cout << "]"<< endl;
    }
