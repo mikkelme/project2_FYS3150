@@ -21,7 +21,7 @@ public:
   void WriteIter(int iter);
   void WriteMeanError(vec& Eigval, vec& Exact, int n);
   void WriteTime(double timeused);
-  void WriteEig(mat& Eigval, mat& R, int n);
+  void WriteEig(mat& Eigval, mat& Eigvec, int n);
   void PrintResults(vec& Eigval, mat& Eigvec, vec& Exact_eigval, mat& Exact_eigvec, int n, bool jacobi_solve, bool armadillo_solve, int arg);
   void OrthTest(double tol);
   void EigValTest(double tol);
