@@ -17,11 +17,7 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   //rho[0] = 0.0;
   rho[n] = rho_max;
   double h = rho[n]/n;
-  for(i=0; i<n; i++){
-  	rho[i] = i*h;
-    rho[i] = rho[i]*rho[i];
-  }
-
+  
   if (arg != 1 || arg != 2){
     for(i = 0; i<n; i++){
       rho[i] = 0;
