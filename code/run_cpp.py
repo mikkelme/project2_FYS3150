@@ -24,7 +24,7 @@ def read_data(txt_file, N):
         data = np.array(infile.readlines()).astype(float)
     return data
 
-def plot(N, data, start, end, title, xlabel, ylabel):
+def plot(N, data, start, end, title, xlabel, ylabel, log_only = False):
     """ Plot linear and logaritmic plot
         with linear regression on the logaritmic plot """
     #Linear regression for logaritmic plot
@@ -34,27 +34,38 @@ def plot(N, data, start, end, title, xlabel, ylabel):
     x = np.linspace(log_N[start], log_N[end], int(1e4))
     y = x*a + b
 
-    #Plot
-    fig, axes = plt.subplots(ncols=1, nrows=2, figsize=(7,6))
-    plt.subplots_adjust(left = 0.12, bottom = 0.09, right = 0.97, top = 0.86, hspace = 0.40)
-    plt.suptitle(title)
-    plt.subplot(2,1,1)
+    if log_only:
+        plt.title(title)
+        plt.plot(log_N, log_data, "o")
+        plt.plot(log_N[start], log_data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
+        plt.plot(log_N[end], log_data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
+        plt.plot(x,y, label = f"Linear regression (y = ax + b) \n a={a:.3f}, b={b:0.3f}, $\delta a$={std_a:0.3f}")
+        plt.xlabel("Log(" + xlabel + ")")
+        plt.ylabel("Log(" + ylabel + ")")
+        plt.legend()
+        plt.show()
+    else:
+        #Plot
+        fig, axes = plt.subplots(ncols=1, nrows=2, figsize=(7,6))
+        plt.subplots_adjust(left = 0.12, bottom = 0.09, right = 0.97, top = 0.86, hspace = 0.40)
+        plt.suptitle(title)
+        plt.subplot(2,1,1)
 
-    plt.title("Linear plot")
-    plt.plot(N, data, "o")
-    plt.plot(N[start], data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
-    plt.plot(N[end], data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend()
+        plt.title("Linear plot")
+        plt.plot(N, data, "o")
+        plt.plot(N[start], data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
+        plt.plot(N[end], data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.legend()
 
-    plt.subplot(2,1,2)
-    plt.title("Logaritmic plot")
-    plt.plot(log_N, log_data, "o")
-    plt.plot(log_N[start], log_data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
-    plt.plot(log_N[end], log_data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
-    plt.plot(x,y, label = f"Linear regression (y = ax + b) \n a={a:.3f}, b={b:0.3f}, $\delta a$={std_a:0.3f}")
-    plt.xlabel("Log(" + xlabel + ")")
-    plt.ylabel("Log(" + ylabel + ")")
-    plt.legend()
-    plt.show()
+        plt.subplot(2,1,2)
+        plt.title("Logaritmic plot")
+        plt.plot(log_N, log_data, "o")
+        plt.plot(log_N[start], log_data[start], "o", color = "tab:green", label = f"start (n = {start+2})")
+        plt.plot(log_N[end], log_data[end], "o", color = "tab:red", label = f"end (n = {end+2})")
+        plt.plot(x,y, label = f"Linear regression (y = ax + b) \n a={a:.3f}, b={b:0.3f}, $\delta a$={std_a:0.3f}")
+        plt.xlabel("Log(" + xlabel + ")")
+        plt.ylabel("Log(" + ylabel + ")")
+        plt.legend()
+        plt.show()
