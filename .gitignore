@@ -15,5 +15,5 @@
 *.DS_Store
 
 #Folders
-/__pycache__
-/Eig where n=100 rhomax=5
+__pycache__/
+Eig where n=100 rhomax=5/
