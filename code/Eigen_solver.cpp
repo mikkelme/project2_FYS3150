@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
   //Select eigenvalue solver
   bool jacobi_solve = true;
-  bool armadillo_solve = false;
+  bool armadillo_solve = true;
 
   clock_t start, finish; //For timing
 
@@ -87,13 +87,10 @@ int main(int argc, char *argv[]) {
 
   //Eigenvector test
   if (run_test){
-    double test_tol = 1.0E-10;
+    double test_tol = 1.0E-2;
     mat A_original = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
     my_functions.EigvecTest(test_tol, Eigval, Eigvec, A_original);
   }
-
-
-
 
 
   //Write results
@@ -103,7 +100,7 @@ int main(int argc, char *argv[]) {
   my_functions.WriteEig(Eigval, Eigvec, n);
 
   //Print results (Only for n ≤ 10)
-  my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
+  //my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
 
 
 

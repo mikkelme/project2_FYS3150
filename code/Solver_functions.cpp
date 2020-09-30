@@ -205,9 +205,10 @@ void Jacobi::WriteEig(mat& Eigval, mat& Eigvec, int n){
    output_file = "Eigvecs.txt";
    ofile.open(output_file);
    for (int i = 0; i < n; i++){
-    for (int j = 0; j <n; j++){
-     ofile << setprecision(8) << Eigvec(j,i) << " ";
-    }
+     for (int j = 0; j <n; j++){
+       ofile << setprecision(8) << Eigvec(j,i) << " ";
+     }
+     ofile << endl;
    }
    ofile.close();
 }
@@ -352,7 +353,6 @@ void Jacobi::EigvecTest(double tol, vec& Eigval, mat& Eigvec, mat& A_original){
   mat A_expected = A_original*Eigvec;
   A_expected.each_row() /= Eigval.t();
 
-
   bool test = true;
 
   int ni = size(A_original)[0];
@@ -365,13 +365,15 @@ void Jacobi::EigvecTest(double tol, vec& Eigval, mat& Eigvec, mat& A_original){
   }
   if (test == false){
     cout << "ERROR" << endl;
-    cout << "With eigenvalues:" << endl;
-    Jacobi::ShowMatrix(Eigval);
-    cout << "and eigenvector:" << endl;
-    Jacobi::ShowMatrix(Eigvec);
-    cout << "The matrix product A*eigenvec:" << endl;
-    Jacobi::ShowMatrix(A_expected);
-    cout << "is NOT equal to the eigenvector." << endl;
+    if (ni <= 10){
+      cout << "With eigenvalues:" << endl;
+      Jacobi::ShowMatrix(Eigval);
+      cout << "and eigenvector:" << endl;
+      Jacobi::ShowMatrix(Eigvec);
+      cout << "The matrix product A*eigenvec:" << endl;
+      Jacobi::ShowMatrix(A_expected);
+      cout << "is NOT equal to the eigenvector." << endl;
+    }
   }
   assert(test);
 

@@ -16,11 +16,11 @@ start = 20
 end = N_max
 
 #Define title and axis labels
-title = [   "Relation between matrix dimension N and Iterations I", \
-            "Relation between matrix dimension N\nand mean error $\epsilon$ between numerical and analytical eigenvalues", \
-            "Relation between matrix dimension N and time used T"   ]
+title = [   "Relation between matrix dimension N and Iterations I\nfor Jacobi method", \
+            "Relation between matrix dimension N\nand mean error $E$ between Jacobi method and analytical eigenvalues", \
+            "Relation between matrix dimension N and time used T\nfor Jacobi method "   ]
 xlabel = "N"
-ylabel = [ "I", "$\epsilon$", "T[s]"]
+ylabel = [ "I", "E", "T[s]"]
 
 #Plot results
 for i in range(len(txt_files)):
