@@ -17,7 +17,6 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   //rho[0] = 0.0;
   rho[n] = rho_max;
   double h = rho[n]/n;
-
   if (arg != 1 || arg != 2){
     for(i = 0; i<n; i++){
       rho[i] = 0;
@@ -41,7 +40,7 @@ mat Jacobi::CreateTridiagonal(double d, double a, int n, int arg, double rho_max
   A(0,1) = a;
   for(i = 1; i < n-1; i++) {
     A(i,i-1) = a;
-    A(i,i)   = d+rho[i];
+    A(i,i)   = d+rho[i+1];
     A(i,i+1) = a;
   }
   A(n-1,n-2) = a;
@@ -201,10 +200,9 @@ void Jacobi::WriteEig(mat& Eigval, mat& Eigvec, int n){
    output_file = "Eigvecs.txt";
    ofile.open(output_file);
    for (int i = 0; i < n; i++){
-     for (int j = 0; j <n; j++){
-       ofile << setprecision(8) << Eigvec(j,i) << " ";
-     }
-     ofile << endl;
+    for (int j = 0; j <n; j++){
+     ofile << setprecision(8) << Eigvec(j,i) << " ";
+    }
    }
    ofile.close();
 }

@@ -15,21 +15,16 @@ int main(int argc, char *argv[]) {
 
   //Initialize problem
   n = atoi(argv[1]);
-  Rmin = 0; Rmax = 1;
+  arg = atoi(argv[2]);   //arg == 1: one electron, arg == 2: two electrons, arg == else: no potential
+  rho_max = atof(argv[3]);
+  w = atof(argv[4]);
+  Rmin = 0; Rmax = rho_max;
 
   h = (Rmax - Rmin)/n; hh = h*h; //Intregration step length
   d = 2.0 / (hh);   // DiagConst
   a =  -1.0 / (hh); //nondiagConst
 
-  arg = atoi(argv[2]); //arg == 1: one electron, arg == 2: two electrons, arg == else: no potential
-  if(arg == 1 || arg == 2){
-    rho_max = atof(argv[3]);
-    w = atof(argv[4]);
-  }
-  else{
-    rho_max = 0.;
-    w = 0.;
-  }
+  
 
   //Create Matrix
   mat A = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
@@ -46,8 +41,8 @@ int main(int argc, char *argv[]) {
   }
 
   //Select eigenvalue solver
-  bool jacobi_solve = false;
-  bool armadillo_solve = true;
+  bool jacobi_solve = true;
+  bool armadillo_solve = false;
 
   clock_t start, finish; //For timing
 
@@ -86,6 +81,7 @@ int main(int argc, char *argv[]) {
   mat Exact_eigvec = pau.second;
 
   //Eigenvector test
+  // Does not work for N approx 170 and larger
   if (run_test){
     double test_tol = 1.0E-10;
     mat A_original = my_functions.CreateTridiagonal(d, a, n, arg, rho_max, w);
@@ -100,7 +96,7 @@ int main(int argc, char *argv[]) {
   my_functions.WriteEig(Eigval, Eigvec, n);
 
   //Print results (Only for n ≤ 10)
-  //my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
+  my_functions.PrintResults(Eigval, Eigvec, Exact_eigval, Exact_eigvec, n, jacobi_solve, armadillo_solve, arg);
 
 
 
